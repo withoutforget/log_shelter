@@ -16,13 +16,19 @@ raw = """
     }}
 """.format(datetime.datetime.now(tz = datetime.UTC).isoformat()).encode()
 
-async def main():    
+async def main_():    
     nc = await nats.connect(servers = "nats://localhost:4222", user = "nats", password = "nats")
 
     await nc.publish("nats.hi", payload = raw)
 
     res = await nc.request("nats.bye", payload = b"""{  "page": 1,  "levels": ["*"],  "sources": ["*"], "order": "asc"}""")
     print(res)
+
+async def main():    
+    nc = await nats.connect(servers = "nats://localhost:4222", user = "nats", password = "nats")
+
+    data = [nc.publish("nats.hi", payload = raw) for _ in range(20)]
+    await asyncio.gather(*data)
 
 if __name__ == '__main__':
     asyncio.run(main())

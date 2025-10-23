@@ -43,6 +43,7 @@ services:
     command: ["-c", "/etc/nats/nats.conf"]
     volumes:
       - ./config/nats.conf:/etc/nats/nats.conf:ro
+      - nats_data:/var/lib/nats/jetstream
     ports:
       - "4222:4222"
       - "8222:8222"
@@ -56,6 +57,7 @@ services:
 
 volumes:
   postgres_data:
+  nats_data:
   redis_data:
 
 networks:
