@@ -2,30 +2,38 @@ package infra
 
 import (
 	"context"
+	"database/sql"
 	"log_shelter/internal/config"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/lib/pq"
 )
 
 type PostgresInfra struct {
-	Pool *pgxpool.Pool
+	ctx context.Context
+	cfg *config.PostgresConfig
 }
 
 func NewPostgresInfra(ctx context.Context, cfg *config.PostgresConfig) (*PostgresInfra, error) {
 	var ret PostgresInfra
-
-	pg_cfg, err := pgxpool.ParseConfig(cfg.Dsn())
-	if err != nil {
-		return nil, err
-	}
-
-	pool, err := pgxpool.NewWithConfig(ctx, pg_cfg)
-
-	if err != nil {
-		return nil, err
-	}
-
-	ret.Pool = pool
-
+	ret.cfg = cfg
+	ret.ctx = ctx
 	return &ret, nil
+}
+
+func (p *PostgresInfra) GetConnection() (*sql.DB, error) {
+	pg, err := sql.Open("postgres", p.cfg.Dsn())
+	return pg, err
+}
+
+func (p *PostgresInfra) GetTranscation() (*sql.DB, *sql.Tx, error) {
+	conn, err := p.GetConnection()
+	if err != nil {
+		return nil, nil, err
+	}
+	tx, err := conn.BeginTx(p.ctx, nil)
+	if err != nil {
+		conn.Close()
+		return nil, nil, err
+	}
+	return conn, tx, nil
 }

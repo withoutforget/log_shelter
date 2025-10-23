@@ -21,7 +21,7 @@ type PostgresConfig struct {
 }
 
 func (p *PostgresConfig) Dsn() string {
-	url := "host=%v port=%v dbname=%v user=%v password=%v"
+	url := "host=%v port=%v dbname=%v user=%v password=%v sslmode=disable"
 	return fmt.Sprintf(url, p.Host, p.Port, p.Database, p.Username, p.Password)
 }
 
