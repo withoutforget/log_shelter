@@ -11,3 +11,12 @@ driver="pgx"
 url="nats://localhost:4222"
 username="nats"
 password="nats"
+[telegram]
+enabled=false
+api_key="YOUR_TOKEN_HERE"
+notificate_to=[758647978]
+levels=["CRITICAL"]
+[logs]
+retencion_policy="after_time"
+delete_after="5m"
+cycle_time="2m"
