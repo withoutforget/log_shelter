@@ -68,12 +68,16 @@ func (s *Server) internalAppendHandler(ctx context.Context, sub *nats.Subscripti
 
 		}
 
-		data, err := sub.FetchBatch(10, nats.MaxWait(1*time.Second))
+		data, err := sub.FetchBatch(100, nats.MaxWait(100*time.Millisecond))
 		if err != nil {
 			continue
 		}
 		i := uint64(0)
 		for msg := range data.Messages() {
+			err = msg.Ack()
+			if err != nil {
+				slog.Error("Cannot ACK message in batch", "err", err)
+			}
 			input, err := ParseInput[usecase.AppendLogRequest](msg.Data)
 			if err != nil {
 				slog.Error("Error while parsing input", "err", err)
@@ -98,7 +102,42 @@ func (s *Server) internalAppendHandler(ctx context.Context, sub *nats.Subscripti
 			}
 			i += 1
 		}
-		slog.Info("Cycle ended", "iters", i)
+		if i != 0 {
+			slog.Info("Cycle ended", "iters", i)
+		}
+	}
+}
+
+func (s *Server) handlerGetTimeline(msg *nats.Msg) {
+	input, err := ParseInput[usecase.GetTimelineRequest](msg.Data)
+	if err != nil {
+		slog.Error("Error while parsing input", "err", err)
+		return
+	}
+
+	conn, tx, err := s.pg.GetTranscation()
+	if err != nil {
+		slog.Error("Error before transaction", "err", err)
+		return
+	}
+	defer conn.Close()
+
+	u := usecase.GetTimelineUsecase{Tx: tx, LogReader: reader.NewLogReader(s.ctx, tx)}
+
+	data, err := u.Run(*input)
+
+	if err != nil {
+		tx.Rollback()
+		slog.Error("Error in usecase", "err", err)
+		return
+	}
+
+	err = msg.Respond(data)
+
+	if err != nil {
+		tx.Rollback()
+		slog.Error("Error in respond", "err", err)
+		return
 	}
 }
 
@@ -113,6 +152,15 @@ func (s *Server) setupAPI() {
 	_, err = nc.Subscribe(
 		"nats.hi",
 		s.handlerAppendLog,
+	)
+
+	if err != nil {
+		slog.Default().Error("Cannot create subscriber", "err", err)
+	}
+
+	_, err = nc.Subscribe(
+		"nats.timeline",
+		s.handlerGetTimeline,
 	)
 
 	if err != nil {

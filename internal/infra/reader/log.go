@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/lib/pq"
 )
 
 type OrderT string
@@ -105,4 +106,75 @@ func (r *LogReader) ReadLogs(
 
 	return ret, nil
 
+}
+
+func (r *LogReader) durationToPSQLInterval(d *time.Duration) time.Duration {
+	if d == nil {
+		return time.Second
+	}
+	return *d
+}
+
+func (r *LogReader) GetTimeLineFor(id uint64, before *time.Duration, after *time.Duration) ([]model.LogModel, error) {
+	/*
+		$1 = id
+		$2 = 5 minutes
+		$3 = 1 minute
+		$4 = ('WARN', 'ERROR', 'CRITICAL', 'FATAL')
+
+	*/
+	query := `
+			WITH critical_log AS (
+				SELECT *
+				FROM logs
+				WHERE id = $1
+			)
+			SELECT l.id, l.raw_log, l.log_level, l.source, 
+				l.created_at, l.request_id, l.logger_name
+			FROM logs l
+			CROSS JOIN critical_log cl
+			WHERE (
+					l.request_id = cl.request_id
+					OR (
+						l.source = cl.source
+						AND l.created_at BETWEEN cl.created_at - $2::interval
+												AND cl.created_at + $3::interval
+					)
+				)
+			AND l.log_level = ANY($4)
+			AND l.is_deleted = false
+			ORDER BY l.created_at ASC
+	`
+
+	rows, err := r.tx.Query(query,
+		id,
+		r.durationToPSQLInterval(before),
+		r.durationToPSQLInterval(after),
+		pq.Array([]string{"WARN", "ERROR", "CRITICAL", "FATAL"}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]model.LogModel, 0)
+
+	for rows.Next() {
+		var entry model.LogModel
+		err := rows.Scan(
+			&entry.ID,
+			&entry.RawLog,
+			&entry.LogLevel,
+			&entry.Source,
+			&entry.CreatedAt,
+			&entry.RequestID,
+			&entry.LoggerName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		entry.IsDeleted = false
+		ret = append(ret, entry)
+	}
+
+	return ret, nil
 }
