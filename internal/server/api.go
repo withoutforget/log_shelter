@@ -62,11 +62,11 @@ func (s *Server) handlerGetLog(msg *nats.Msg) {
 
 func (s *Server) internalAppendHandler(ctx context.Context, sub *nats.Subscription) {
 	for {
+		timer := time.NewTimer(time.Duration(s.cfg.Logs.CycleTime))
 		select {
 		case <-ctx.Done():
 			return
-		default:
-
+		case <-timer.C:
 		}
 
 		data, err := sub.FetchBatch(100, nats.MaxWait(100*time.Millisecond))
