@@ -3,10 +3,11 @@ package notifications
 import (
 	"fmt"
 	"log/slog"
-	"log_shelter/internal/config"
 	"slices"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"log_shelter/internal/config"
 )
 
 type TelegramNotifications struct {
@@ -54,7 +55,6 @@ func (t *TelegramNotifications) Notify(log NotifyLogModel) {
 	for _, id := range t.users {
 		msg := tgbotapi.NewMessage(id, text)
 		_, err := t.bot.Send(msg)
-
 		if err != nil {
 			slog.Error("Cannot notificate telegram user", "id", id, "err", err)
 		}

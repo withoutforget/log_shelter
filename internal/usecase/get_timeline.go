@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
-	"log_shelter/internal/infra/reader"
 	"time"
+
+	"log_shelter/internal/infra/reader"
 )
 
 type GetTimelineRequest struct {
@@ -30,7 +31,6 @@ func (u *GetTimelineUsecase) Run(data GetTimelineRequest) ([]byte, error) {
 		slog.Error("oops... read", "Err", err)
 	}
 	bytes, err := json.Marshal(result)
-
 	if err != nil {
 		u.Tx.Rollback()
 		slog.Error("oops... to json", "Err", err)

@@ -3,12 +3,13 @@ package reader
 import (
 	"context"
 	"database/sql"
-	"log_shelter/internal/model"
 	"slices"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
+
+	"log_shelter/internal/model"
 )
 
 type OrderT string
@@ -25,7 +26,8 @@ type LogReader struct {
 
 func NewLogReader(
 	ctx context.Context,
-	tx *sql.Tx) *LogReader {
+	tx *sql.Tx,
+) *LogReader {
 	return &LogReader{tx: tx, ctx: ctx}
 }
 
@@ -75,13 +77,11 @@ func (r *LogReader) ReadLogs(
 	q = q.Where(squirrel.Eq{"is_deleted": false})
 
 	query, args, err := q.PlaceholderFormat(squirrel.Dollar).ToSql()
-
 	if err != nil {
 		return nil, err
 	}
 
 	rows, err := r.tx.Query(query, args...)
-
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,6 @@ func (r *LogReader) ReadLogs(
 	}
 
 	return ret, nil
-
 }
 
 func (r *LogReader) durationToPSQLInterval(d *time.Duration) time.Duration {
@@ -117,7 +116,11 @@ func (r *LogReader) durationToPSQLInterval(d *time.Duration) time.Duration {
 	return *d
 }
 
-func (r *LogReader) GetTimeLineFor(id uint64, before *time.Duration, after *time.Duration) ([]model.LogModel, error) {
+func (r *LogReader) GetTimeLineFor(
+	id uint64,
+	before *time.Duration,
+	after *time.Duration,
+) ([]model.LogModel, error) {
 	/*
 		$1 = id
 		$2 = 5 minutes
@@ -153,7 +156,6 @@ func (r *LogReader) GetTimeLineFor(id uint64, before *time.Duration, after *time
 		r.durationToPSQLInterval(before),
 		r.durationToPSQLInterval(after),
 		pq.Array([]string{"WARN", "ERROR", "CRITICAL", "FATAL"}))
-
 	if err != nil {
 		return nil, err
 	}

@@ -3,8 +3,9 @@ package usecase
 import (
 	"database/sql"
 	"log/slog"
-	"log_shelter/internal/infra/repository"
 	"time"
+
+	"log_shelter/internal/infra/repository"
 )
 
 type AppendLogRequest struct {
@@ -22,8 +23,14 @@ type AppendLogUsecase struct {
 }
 
 func (u *AppendLogUsecase) Run(data AppendLogRequest) error {
-	err := u.LogRepo.AppendLog(data.RawLog, data.LogLevel, data.Source, data.CreatedAt, data.RequestID, data.LoggerName)
-
+	err := u.LogRepo.AppendLog(
+		data.RawLog,
+		data.LogLevel,
+		data.Source,
+		data.CreatedAt,
+		data.RequestID,
+		data.LoggerName,
+	)
 	if err != nil {
 		u.Tx.Rollback()
 		slog.Error("oops... append", "Err", err)

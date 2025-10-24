@@ -3,9 +3,10 @@ package infra
 import (
 	"context"
 	"database/sql"
-	"log_shelter/internal/config"
 
 	_ "github.com/lib/pq"
+
+	"log_shelter/internal/config"
 )
 
 type PostgresInfra struct {

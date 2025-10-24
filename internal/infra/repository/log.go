@@ -15,7 +15,8 @@ type LogRepository struct {
 
 func NewLogRepository(
 	ctx context.Context,
-	tx *sql.Tx) *LogRepository {
+	tx *sql.Tx,
+) *LogRepository {
 	return &LogRepository{tx: tx, ctx: ctx}
 }
 

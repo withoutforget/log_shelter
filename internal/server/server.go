@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+
 	"log_shelter/internal/config"
 	"log_shelter/internal/infra"
 	"log_shelter/internal/infra/notifications"
@@ -20,19 +21,16 @@ func NewServer(ctx context.Context, cfg *config.Config) *Server {
 
 	srv.cfg = cfg
 	nats, err := infra.NewNatsInfra(&cfg.Nats)
-
 	if err != nil {
 		panic(err)
 	}
 
 	pg, err := infra.NewPostgresInfra(ctx, &cfg.Postgres)
-
 	if err != nil {
 		panic(err)
 	}
 
 	tg, err := notifications.NewTelegramNotifications(&cfg.Telegram)
-
 	if err != nil {
 		panic(err)
 	}

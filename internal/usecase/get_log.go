@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
-	"log_shelter/internal/infra/reader"
 	"time"
+
+	"log_shelter/internal/infra/reader"
 )
 
 type GetLogRequest struct {
@@ -40,12 +41,10 @@ func (u *GetLogUsecase) Run(data GetLogRequest) ([]byte, error) {
 		slog.Error("oops... read", "Err", err)
 	}
 	bytes, err := json.Marshal(result)
-
 	if err != nil {
 		u.Tx.Rollback()
 		slog.Error("oops... to json", "Err", err)
 	}
 	u.Tx.Commit()
 	return bytes, err
-
 }

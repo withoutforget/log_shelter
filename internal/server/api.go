@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"time"
+
+	"github.com/nats-io/nats.go"
+
 	"log_shelter/internal/infra/notifications"
 	"log_shelter/internal/infra/reader"
 	"log_shelter/internal/infra/repository"
 	"log_shelter/internal/usecase"
-	"time"
-
-	"github.com/nats-io/nats.go"
 )
 
 func ParseInput[T any](data []byte) (*T, error) {
@@ -27,6 +28,7 @@ func (s *Server) handlerAppendLog(msg *nats.Msg) {
 
 	nc.Publish("nats.__internal.append", msg.Data)
 }
+
 func (s *Server) handlerGetLog(msg *nats.Msg) {
 	input, err := ParseInput[usecase.GetLogRequest](msg.Data)
 	if err != nil {
@@ -44,7 +46,6 @@ func (s *Server) handlerGetLog(msg *nats.Msg) {
 	u := usecase.GetLogUsecase{Tx: tx, LogReader: reader.NewLogReader(s.ctx, tx)}
 
 	data, err := u.Run(*input)
-
 	if err != nil {
 		tx.Rollback()
 		slog.Error("Error in usecase", "err", err)
@@ -52,7 +53,6 @@ func (s *Server) handlerGetLog(msg *nats.Msg) {
 	}
 
 	err = msg.Respond(data)
-
 	if err != nil {
 		tx.Rollback()
 		slog.Error("Error in respond", "err", err)
@@ -95,7 +95,6 @@ func (s *Server) internalAppendHandler(ctx context.Context, sub *nats.Subscripti
 			u := usecase.AppendLogUsecase{Tx: tx, LogRepo: repository.NewLogRepository(s.ctx, tx)}
 
 			err = u.Run(*input)
-
 			if err != nil {
 				tx.Rollback()
 				slog.Error("Error in usecase", "err", err)
@@ -135,7 +134,6 @@ func (s *Server) handlerGetTimeline(msg *nats.Msg) {
 	u := usecase.GetTimelineUsecase{Tx: tx, LogReader: reader.NewLogReader(s.ctx, tx)}
 
 	data, err := u.Run(*input)
-
 	if err != nil {
 		tx.Rollback()
 		slog.Error("Error in usecase", "err", err)
@@ -143,7 +141,6 @@ func (s *Server) handlerGetTimeline(msg *nats.Msg) {
 	}
 
 	err = msg.Respond(data)
-
 	if err != nil {
 		tx.Rollback()
 		slog.Error("Error in respond", "err", err)
@@ -164,7 +161,6 @@ func (s *Server) logRetention(ctx context.Context) {
 		}
 
 		conn, tx, err := pg.GetTranscation()
-
 		if err != nil {
 			slog.Error("Error before transcation in retention", "err", err)
 		}
@@ -194,7 +190,6 @@ func (s *Server) logRetention(ctx context.Context) {
 func (s *Server) setupAPI() {
 	nc := s.nats.Conn
 	js, err := nc.JetStream()
-
 	if err != nil {
 		panic(err)
 	}
@@ -203,7 +198,6 @@ func (s *Server) setupAPI() {
 		"nats.hi",
 		s.handlerAppendLog,
 	)
-
 	if err != nil {
 		slog.Default().Error("Cannot create subscriber", "err", err)
 	}
@@ -212,7 +206,6 @@ func (s *Server) setupAPI() {
 		"nats.timeline",
 		s.handlerGetTimeline,
 	)
-
 	if err != nil {
 		slog.Default().Error("Cannot create subscriber", "err", err)
 	}
@@ -221,7 +214,6 @@ func (s *Server) setupAPI() {
 		"nats.bye",
 		s.handlerGetLog,
 	)
-
 	if err != nil {
 		slog.Default().Error("Cannot create subscriber", "err", err)
 	}

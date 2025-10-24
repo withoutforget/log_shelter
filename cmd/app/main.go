@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"log_shelter/internal/config"
-	"log_shelter/internal/logging"
-	"log_shelter/internal/server"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"log_shelter/internal/config"
+	"log_shelter/internal/logging"
+	"log_shelter/internal/server"
 )
 
 func main() {
@@ -17,7 +18,12 @@ func main() {
 
 	logging.InitLogger(cfg.Logger)
 
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGABRT, syscall.SIGINT)
+	ctx, cancel := signal.NotifyContext(
+		context.Background(),
+		syscall.SIGTERM,
+		syscall.SIGABRT,
+		syscall.SIGINT,
+	)
 	defer cancel()
 
 	srv := server.NewServer(ctx, cfg)

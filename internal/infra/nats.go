@@ -2,10 +2,11 @@ package infra
 
 import (
 	"log/slog"
-	"log_shelter/internal/config"
 	"sync/atomic"
 
 	"github.com/nats-io/nats.go"
+
+	"log_shelter/internal/config"
 )
 
 type NatsStatus int
