@@ -126,8 +126,8 @@ async def main():
                    for i in data
     ]
 
-    await asyncio.gather(*tasks)
-    return
+    ##await asyncio.gather(*tasks)
+    ## return
     res = await nc.request("nats.bye", payload = b"""{  "page": 1,  "levels": ["*"],  "sources": ["*"], "order": "asc"}""")
     print(res)
     

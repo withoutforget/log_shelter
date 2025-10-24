@@ -151,6 +151,46 @@ func (s *Server) handlerGetTimeline(msg *nats.Msg) {
 	}
 }
 
+func (s *Server) logRetention(ctx context.Context) {
+	cfg := s.cfg.Logs
+	pg := s.pg
+	for {
+		time.Sleep(time.Duration(cfg.CycleTime))
+		select {
+		case <-ctx.Done():
+			return
+		default:
+
+		}
+
+		conn, tx, err := pg.GetTranscation()
+
+		if err != nil {
+			slog.Error("Error before transcation in retention", "err", err)
+		}
+
+		defer conn.Close()
+
+		repo := repository.NewLogRepository(ctx, tx)
+
+		switch cfg.RetencionPolicy {
+		case "after_time":
+			err := repo.RetentOlder(time.Duration(cfg.DeleteAfter))
+			if err != nil {
+				slog.Error("Error in retention", "err", err)
+			}
+			err = tx.Commit()
+			if err != nil {
+				slog.Error("Error in retention commit", "err", err)
+			}
+		default:
+			tx.Rollback()
+			return
+		}
+		slog.Info("Cycle ended")
+	}
+}
+
 func (s *Server) setupAPI() {
 	nc := s.nats.Conn
 	js, err := nc.JetStream()
@@ -191,4 +231,5 @@ func (s *Server) setupAPI() {
 		slog.Default().Error("Cannot create subscriber", "err", err)
 	}
 	go s.internalAppendHandler(s.ctx, internal_append_sub)
+	go s.logRetention(s.ctx)
 }

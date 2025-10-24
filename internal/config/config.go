@@ -26,6 +26,7 @@ func (p *PostgresConfig) Dsn() string {
 }
 
 type TelegramConfig struct {
+	Enabled      bool     `toml:"enabled"`
 	APIKey       string   `toml:"api_key"`
 	Levels       []string `toml:"levels"`
 	NotificateTo []int64  `toml:"notificate_to"`
@@ -37,11 +38,18 @@ type NatsConfig struct {
 	Password string `toml:"password"`
 }
 
+type LogConfig struct {
+	RetencionPolicy string   `toml:"retencion_policy"`
+	DeleteAfter     Duration `toml:"delete_after"`
+	CycleTime       Duration `toml:"cycle_time"`
+}
+
 type Config struct {
 	Logger   LoggerConfig   `toml:"logger"`
 	Postgres PostgresConfig `toml:"postgres"`
 	Nats     NatsConfig     `toml:"nats"`
 	Telegram TelegramConfig `toml:"telegram"`
+	Logs     LogConfig
 }
 
 func readConfigFile(filename string) []byte {

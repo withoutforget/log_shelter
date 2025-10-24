@@ -72,6 +72,8 @@ func (r *LogReader) ReadLogs(
 
 	q = q.OrderBy("created_at " + string(order))
 
+	q = q.Where(squirrel.Eq{"is_deleted": false})
+
 	query, args, err := q.PlaceholderFormat(squirrel.Dollar).ToSql()
 
 	if err != nil {

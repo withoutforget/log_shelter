@@ -51,3 +51,17 @@ func (r *LogRepository) AppendLog(
 
 	return err
 }
+
+func (r *LogRepository) RetentOlder(delta time.Duration) error {
+	q := `
+		UPDATE logs
+		SET is_deleted = true
+		WHERE created_at < $1
+		AND is_deleted = false
+		RETURNING id, created_at, is_deleted;
+	`
+	deletion_time := time.Now().UTC().Add(-delta)
+	_, err := r.tx.Query(q, deletion_time)
+
+	return err
+}

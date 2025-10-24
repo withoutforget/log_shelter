@@ -10,9 +10,10 @@ import (
 )
 
 type TelegramNotifications struct {
-	bot    *tgbotapi.BotAPI
-	levels []string
-	users  []int64
+	bot     *tgbotapi.BotAPI
+	levels  []string
+	users   []int64
+	enabled bool
 }
 
 type NotifyLogModel struct {
@@ -29,7 +30,12 @@ func NewTelegramNotifications(cfg *config.TelegramConfig) (*TelegramNotification
 		return nil, err
 	}
 
-	return &TelegramNotifications{bot: bot, levels: cfg.Levels, users: cfg.NotificateTo}, nil
+	return &TelegramNotifications{
+		bot:     bot,
+		levels:  cfg.Levels,
+		users:   cfg.NotificateTo,
+		enabled: cfg.Enabled,
+	}, nil
 }
 
 func (t *TelegramNotifications) ShouldNotify(logLevel string) bool {
@@ -37,6 +43,9 @@ func (t *TelegramNotifications) ShouldNotify(logLevel string) bool {
 }
 
 func (t *TelegramNotifications) Notify(log NotifyLogModel) {
+	if !t.enabled {
+		return
+	}
 	text := ""
 	text = fmt.Sprintf("Notification from \"%v\"!\n", log.Source)
 	text = fmt.Sprintf("%v[%v]\n", text, log.LogLevel)
