@@ -4,3 +4,5 @@
 [doc("Counting lines of code in git")]
 @lines:
     cloc --vcs=git .
+@fmt:
+    golangci-lint fmt
