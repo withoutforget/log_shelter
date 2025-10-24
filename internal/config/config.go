@@ -25,6 +25,12 @@ func (p *PostgresConfig) Dsn() string {
 	return fmt.Sprintf(url, p.Host, p.Port, p.Database, p.Username, p.Password)
 }
 
+type TelegramConfig struct {
+	APIKey       string   `toml:"api_key"`
+	Levels       []string `toml:"levels"`
+	NotificateTo []int64  `toml:"notificate_to"`
+}
+
 type NatsConfig struct {
 	Url      string `toml:"url"`
 	Username string `toml:"username"`
@@ -35,6 +41,7 @@ type Config struct {
 	Logger   LoggerConfig   `toml:"logger"`
 	Postgres PostgresConfig `toml:"postgres"`
 	Nats     NatsConfig     `toml:"nats"`
+	Telegram TelegramConfig `toml:"telegram"`
 }
 
 func readConfigFile(filename string) []byte {

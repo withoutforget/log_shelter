@@ -4,6 +4,7 @@ import (
 	"context"
 	"log_shelter/internal/config"
 	"log_shelter/internal/infra"
+	"log_shelter/internal/infra/notifications"
 )
 
 type Server struct {
@@ -11,6 +12,7 @@ type Server struct {
 	cfg  *config.Config
 	nats *infra.NatsInfra
 	pg   *infra.PostgresInfra
+	tg   *notifications.TelegramNotifications
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) *Server {
@@ -29,9 +31,16 @@ func NewServer(ctx context.Context, cfg *config.Config) *Server {
 		panic(err)
 	}
 
+	tg, err := notifications.NewTelegramNotifications(&cfg.Telegram)
+
+	if err != nil {
+		panic(err)
+	}
+
 	srv.nats = nats
 	srv.ctx = ctx
 	srv.pg = pg
+	srv.tg = tg
 
 	return &srv
 }

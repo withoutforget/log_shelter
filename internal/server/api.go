@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"log_shelter/internal/infra/notifications"
 	"log_shelter/internal/infra/reader"
 	"log_shelter/internal/infra/repository"
 	"log_shelter/internal/usecase"
@@ -99,6 +100,15 @@ func (s *Server) internalAppendHandler(ctx context.Context, sub *nats.Subscripti
 				tx.Rollback()
 				slog.Error("Error in usecase", "err", err)
 				return
+			}
+			if s.tg.ShouldNotify(input.LogLevel) {
+				s.tg.Notify(notifications.NotifyLogModel{
+					RawLog:     input.RawLog,
+					LogLevel:   input.LogLevel,
+					Source:     input.Source,
+					RequestID:  input.RequestID,
+					LoggerName: input.LoggerName,
+				})
 			}
 			i += 1
 		}

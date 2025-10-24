@@ -120,14 +120,14 @@ async def main():
     data = generate_test_logs()
     data = [make_request(**i) for i in data]
     
-    """tasks = [
+    tasks = [
         nc.publish("nats.hi",
                    payload = i.encode())
                    for i in data
-    ]"""
+    ]
 
-    #await asyncio.gather(*tasks)
-
+    await asyncio.gather(*tasks)
+    return
     res = await nc.request("nats.bye", payload = b"""{  "page": 1,  "levels": ["*"],  "sources": ["*"], "order": "asc"}""")
     print(res)
     

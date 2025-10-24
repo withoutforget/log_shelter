@@ -11,3 +11,7 @@ driver="pgx"
 url="nats://localhost:4222"
 username="nats"
 password="nats"
+[telegram]
+api_key="5566552634:AAGzzg2aAk2Y_tSLVuTtuZUCuZRpUTGloaI"
+notificate_to=[758647978]
+levels=["CRITICAL"]
