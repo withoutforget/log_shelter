@@ -191,9 +191,11 @@ func (s *Server) logRetention(ctx context.Context) {
 }
 
 func (s *Server) handlerDebezium(msg *nats.Msg) {
+	err := s.es.Handle(msg.Data)
 
-	slog.Info("got", "s", string(msg.Data))
-
+	if err != nil {
+		slog.Error("Error", "error", err)
+	}
 }
 
 func (s *Server) setupAPI() {

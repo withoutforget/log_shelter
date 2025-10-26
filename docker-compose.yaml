@@ -61,7 +61,7 @@ services:
       retries: 3
 
   debezium:
-    image: debezium/server:2.1
+    image: quay.io/debezium/server:2.5.0.Final
     ports:
       - "8080:8080"
     volumes:
@@ -69,6 +69,24 @@ services:
     depends_on:
       - nats
       - postgres
+      - elasticsearch
+    networks:
+      - log_shelter_network
+
+  elasticsearch:
+    image: elasticsearch:8.18.8
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
     networks:
       - log_shelter_network
 
@@ -76,6 +94,7 @@ volumes:
   postgres_data:
   nats_data:
   redis_data:
+  es_data:
 
 networks:
   log_shelter_network:

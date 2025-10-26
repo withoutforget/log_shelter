@@ -14,6 +14,7 @@ type Server struct {
 	nats *infra.NatsInfra
 	pg   *infra.PostgresInfra
 	tg   *notifications.TelegramNotifications
+	es   *infra.ElastickInfra
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) *Server {
@@ -39,7 +40,7 @@ func NewServer(ctx context.Context, cfg *config.Config) *Server {
 	srv.ctx = ctx
 	srv.pg = pg
 	srv.tg = tg
-
+	srv.es = infra.NewElastickInfra()
 	return &srv
 }
 
