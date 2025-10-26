@@ -126,15 +126,15 @@ async def main():
                    for i in data
     ]
 
-    ##await asyncio.gather(*tasks)
+    await asyncio.gather(*tasks)
     ## return
-    res = await nc.request("nats.bye", payload = b"""{  "page": 1,  "levels": ["*"],  "sources": ["*"], "order": "asc"}""")
-    print(res)
+    ##res = await nc.request("nats.bye", payload = b"""{  "page": 1,  "levels": ["*"],  "sources": ["*"], "order": "asc"}""")
+    ##print(res)
     
     print("_______")
 
-    res = await nc.request("nats.timeline", payload = b"""{ "id": 61 }""")
-    print(res)
+    ##res = await nc.request("nats.timeline", payload = b"""{ "id": 61 }""")
+    ##print(res)
     await nc.close()
 
 if __name__ == '__main__':

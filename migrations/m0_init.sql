@@ -1,0 +1,5 @@
+CREATE ROLE repl WITH REPLICATION LOGIN PASSWORD 'repl';
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO repl;
+GRANT CREATE ON DATABASE postgres TO repl;
+CREATE PUBLICATION dbz_publication FOR ALL TABLES;
+SELECT pg_create_logical_replication_slot('repl_slot', 'pgoutput');

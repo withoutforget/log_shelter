@@ -62,14 +62,13 @@ func (s *Server) handlerGetLog(msg *nats.Msg) {
 
 func (s *Server) internalAppendHandler(ctx context.Context, sub *nats.Subscription) {
 	for {
-		timer := time.NewTimer(time.Duration(s.cfg.Logs.CycleTime))
 		select {
 		case <-ctx.Done():
 			return
-		case <-timer.C:
+		default:
 		}
 
-		data, err := sub.FetchBatch(100, nats.MaxWait(100*time.Millisecond))
+		data, err := sub.FetchBatch(100, 100*nats.MaxWait(time.Millisecond))
 		if err != nil {
 			continue
 		}
@@ -82,24 +81,28 @@ func (s *Server) internalAppendHandler(ctx context.Context, sub *nats.Subscripti
 			input, err := ParseInput[usecase.AppendLogRequest](msg.Data)
 			if err != nil {
 				slog.Error("Error while parsing input", "err", err)
-				return
+				continue
 			}
 
 			conn, tx, err := s.pg.GetTranscation()
 			if err != nil {
 				slog.Error("Error before transaction", "err", err)
-				return
+				continue
 			}
-			defer conn.Close()
 
 			u := usecase.AppendLogUsecase{Tx: tx, LogRepo: repository.NewLogRepository(s.ctx, tx)}
 
 			err = u.Run(*input)
 			if err != nil {
-				tx.Rollback()
+				e := tx.Rollback()
+				conn.Close()
+				if e != nil {
+					slog.Error("Cannot rollback", "err", e)
+				}
 				slog.Error("Error in usecase", "err", err)
-				return
+				continue
 			}
+			conn.Close()
 			if s.tg.ShouldNotify(input.LogLevel) {
 				s.tg.Notify(notifications.NotifyLogModel{
 					RawLog:     input.RawLog,
@@ -187,6 +190,12 @@ func (s *Server) logRetention(ctx context.Context) {
 	}
 }
 
+func (s *Server) handlerDebezium(msg *nats.Msg) {
+
+	slog.Info("got", "s", string(msg.Data))
+
+}
+
 func (s *Server) setupAPI() {
 	nc := s.nats.Conn
 	js, err := nc.JetStream()
@@ -218,10 +227,18 @@ func (s *Server) setupAPI() {
 		slog.Default().Error("Cannot create subscriber", "err", err)
 	}
 
-	internal_append_sub, err := js.PullSubscribe("nats.__internal.append", "my_cons")
+	internal_append_sub, err := js.PullSubscribe("nats.__internal.append", "append_stream")
 	if err != nil {
 		slog.Default().Error("Cannot create subscriber", "err", err)
 	}
 	go s.internalAppendHandler(s.ctx, internal_append_sub)
 	go s.logRetention(s.ctx)
+
+	_, err = nc.Subscribe(
+		"postgres.*.*",
+		s.handlerDebezium,
+	)
+	if err != nil {
+		slog.Default().Error("Cannot create subscriber", "err", err)
+	}
 }
