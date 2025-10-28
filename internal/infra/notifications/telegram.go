@@ -26,11 +26,16 @@ type NotifyLogModel struct {
 }
 
 func NewTelegramNotifications(cfg *config.TelegramConfig) (*TelegramNotifications, error) {
-	bot, err := tgbotapi.NewBotAPI(cfg.APIKey)
-	if err != nil {
-		return nil, err
+	var bot *tgbotapi.BotAPI
+	if cfg.Enabled {
+		b, err := tgbotapi.NewBotAPI(cfg.APIKey)
+		if err != nil {
+			return nil, err
+		}
+		bot = b
+	} else {
+		bot = nil
 	}
-
 	return &TelegramNotifications{
 		bot:     bot,
 		levels:  cfg.Levels,
