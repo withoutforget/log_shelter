@@ -167,7 +167,7 @@ func (s *Server) setupNatsAPI() {
 	}
 
 	_, err = nc.Subscribe(
-		"nats.hi",
+		"log_shelter.append",
 		s.handlerAppendLog,
 	)
 	if err != nil {
@@ -175,7 +175,7 @@ func (s *Server) setupNatsAPI() {
 	}
 
 	_, err = nc.Subscribe(
-		"nats.timeline",
+		"log_shelter.timeline",
 		s.handlerGetTimeline,
 	)
 	if err != nil {
@@ -183,7 +183,7 @@ func (s *Server) setupNatsAPI() {
 	}
 
 	_, err = nc.Subscribe(
-		"nats.bye",
+		"log_shelter.get",
 		s.handlerGetLog,
 	)
 	if err != nil {
@@ -191,14 +191,14 @@ func (s *Server) setupNatsAPI() {
 	}
 
 	_, err = nc.Subscribe(
-		"postgres.*.*",
+		"log_shelter.__internal.postgres.*.*",
 		s.handlerDebezium,
 	)
 	if err != nil {
 		slog.Default().Error("Cannot create subscriber", "err", err)
 	}
 
-	internal_append_sub, err := js.PullSubscribe("nats.__internal.append", "append_stream")
+	internal_append_sub, err := js.PullSubscribe("log_shelter.__internal.append", "append_stream")
 	if err != nil {
 		slog.Default().Error("Cannot create subscriber", "err", err)
 	}
