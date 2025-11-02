@@ -4,17 +4,19 @@ import (
 	"context"
 
 	"log_shelter/internal/config"
+	"log_shelter/internal/factory"
 	"log_shelter/internal/infra"
 	"log_shelter/internal/infra/notifications"
 )
 
 type Server struct {
-	ctx  context.Context
-	cfg  *config.Config
-	nats *infra.NatsInfra
-	pg   *infra.PostgresInfra
-	tg   *notifications.TelegramNotifications
-	es   *infra.ElastickInfra
+	ctx     context.Context
+	cfg     *config.Config
+	nats    *infra.NatsInfra
+	pg      *infra.PostgresInfra
+	tg      *notifications.TelegramNotifications
+	es      *infra.ElastickInfra
+	factory *factory.Factory
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) *Server {
@@ -41,6 +43,10 @@ func NewServer(ctx context.Context, cfg *config.Config) *Server {
 	srv.pg = pg
 	srv.tg = tg
 	srv.es = infra.NewElastickInfra()
+
+	f := factory.NewFactory(srv.pg)
+	srv.factory = f
+
 	return &srv
 }
 

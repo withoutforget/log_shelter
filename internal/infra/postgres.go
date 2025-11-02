@@ -12,6 +12,7 @@ import (
 type PostgresInfra struct {
 	ctx context.Context
 	cfg *config.PostgresConfig
+	db  *sql.DB
 }
 
 func NewPostgresInfra(ctx context.Context, cfg *config.PostgresConfig) (*PostgresInfra, error) {
@@ -21,12 +22,18 @@ func NewPostgresInfra(ctx context.Context, cfg *config.PostgresConfig) (*Postgre
 	return &ret, nil
 }
 
-func (p *PostgresInfra) GetConnection() (*sql.DB, error) {
-	pg, err := sql.Open("postgres", p.cfg.Dsn())
-	return pg, err
+func (p *PostgresInfra) GetConnection() (*sql.Conn, error) {
+	if p.db == nil {
+		pg, err := sql.Open("postgres", p.cfg.Dsn())
+		if err == nil {
+			return nil, err
+		}
+		p.db = pg
+	}
+	return p.db.Conn(p.ctx)
 }
 
-func (p *PostgresInfra) GetTranscation() (*sql.DB, *sql.Tx, error) {
+func (p *PostgresInfra) GetTranscation() (*sql.Conn, *sql.Tx, error) {
 	conn, err := p.GetConnection()
 	if err != nil {
 		return nil, nil, err

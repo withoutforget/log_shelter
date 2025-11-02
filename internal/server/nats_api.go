@@ -35,26 +35,17 @@ func (s *Server) handlerGetLog(msg *nats.Msg) {
 		slog.Error("Error while parsing input", "err", err)
 		return
 	}
-
-	conn, tx, err := s.pg.GetTranscation()
+	f, err := s.factory.GetUsecaseFactory(s.ctx)
 	if err != nil {
-		slog.Error("Error before transaction", "err", err)
+		slog.Error("Cannot get factory", "err", err)
 		return
 	}
-	defer conn.Close()
-
-	u := usecase.GetLogUsecase{Tx: tx, LogReader: reader.NewLogReader(s.ctx, tx)}
-
-	data, err := u.Run(*input)
+	data, err := f.GetGetLogUsecase().Run(*input)
 	if err != nil {
-		tx.Rollback()
-		slog.Error("Error in usecase", "err", err)
 		return
 	}
-
 	err = msg.Respond(data)
 	if err != nil {
-		tx.Rollback()
 		slog.Error("Error in respond", "err", err)
 		return
 	}

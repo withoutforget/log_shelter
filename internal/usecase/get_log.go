@@ -44,6 +44,7 @@ func (u *GetLogUsecase) Run(data GetLogRequest) ([]byte, error) {
 	if err != nil {
 		u.Tx.Rollback()
 		slog.Error("oops... to json", "Err", err)
+		return nil, err
 	}
 	u.Tx.Commit()
 	return bytes, err

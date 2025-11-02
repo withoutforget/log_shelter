@@ -32,3 +32,7 @@ func (f *UsecaseFactory) Close() {
 func (f *UsecaseFactory) GetAppendLogUsecase() *usecase.AppendLogUsecase {
 	return &usecase.AppendLogUsecase{Tx: f.tx, LogRepo: f.repo_factory.GetLogRepository()}
 }
+
+func (f *UsecaseFactory) GetGetLogUsecase() *usecase.GetLogUsecase {
+	return &usecase.GetLogUsecase{Tx: f.tx, LogReader: f.reader_factory.GetLogReader()}
+}
