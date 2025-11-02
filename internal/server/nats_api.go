@@ -153,7 +153,6 @@ func (s *Server) handlerGetTimeline(msg *nats.Msg) {
 
 func (s *Server) handlerDebezium(msg *nats.Msg) {
 	err := s.es.Handle(msg.Data)
-
 	if err != nil {
 		slog.Error("Error", "error", err)
 	}

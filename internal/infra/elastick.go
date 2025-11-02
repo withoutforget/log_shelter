@@ -24,6 +24,7 @@ func NewElastickInfra() *ElastickInfra {
 	}
 	return &ElastickInfra{Client: cl}
 }
+
 func (e *ElastickInfra) Handle(input_data []byte) error {
 	var data struct {
 		Payload struct {
@@ -54,7 +55,12 @@ func (e *ElastickInfra) Handle(input_data []byte) error {
 
 	if p.Op == "c" || p.Op == "u" || p.Op == "r" {
 		body, _ := json.Marshal(p.After)
-		res, err := e.Client.Index(index, bytes.NewReader(body), e.Client.Index.WithDocumentID(docID), e.Client.Index.WithContext(ctx))
+		res, err := e.Client.Index(
+			index,
+			bytes.NewReader(body),
+			e.Client.Index.WithDocumentID(docID),
+			e.Client.Index.WithContext(ctx),
+		)
 		if err != nil {
 			return fmt.Errorf("index failed: %w", err)
 		}
